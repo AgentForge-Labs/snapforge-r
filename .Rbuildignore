@@ -1,0 +1,4 @@
+^release[.]json$
+^r-universe$
+^cran-comments[.]md$
+^README[.]md$
