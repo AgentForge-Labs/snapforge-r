@@ -1,0 +1,14 @@
+name: R-universe build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: r-universe-org/workflows/.github/workflows/build.yml@v3
+    with:
+      universe: agentforge-labs

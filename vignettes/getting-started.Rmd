@@ -1,0 +1,119 @@
+---
+title: "Getting started with SnapForge"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with SnapForge}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## Install from AgentForge Labs R-universe
+
+Package installation is free. Hosted API usage requires an AgentForge/SnapForge
+account and is metered server-side. The SDK never disables or bypasses quota
+enforcement.
+
+```r
+install.packages(
+  "snapforge",
+  repos = c(
+    "https://agentforge-labs.r-universe.dev",
+    "https://cloud.r-project.org"
+  )
+)
+```
+
+Create a free account in the SnapForge web application, create an API key, and
+store it outside source code:
+
+```r
+Sys.setenv(SNAPFORGE_API_KEY = "replace-with-your-key")
+library(snapforge)
+client <- snapforge_client()
+```
+
+Capture a page and inspect quota metadata:
+
+```r
+capture <- snapforge_capture(
+  client,
+  "https://example.com",
+  device = "both",
+  idempotency_key = "my-stable-request-id"
+)
+capture$body$files
+capture$quota
+```
+
+Read page context:
+
+```r
+context <- snapforge_context(client, "https://example.com")
+context$body$context$summary
+```
+
+Persisted job helpers are available for status and artifacts:
+
+```r
+job <- snapforge_get_job(client, capture$body$jobId)
+archive <- snapforge_download_job(client, capture$body$jobId)
+```
+
+## Explicit self-hosted mode
+
+Self-hosted/community deployments are never selected implicitly. Point the
+client at them explicitly:
+
+```r
+local <- snapforge_client(
+  base_url = "http://localhost:3010",
+  access_token = ""
+)
+snapforge_service_info(local)
+```
+
+URL-secret authentication is also supported for compatible deployments:
+
+```r
+secret_client <- snapforge_client(
+  base_url = "https://screenshots.example.com",
+  access_token = "",
+  url_secret = Sys.getenv("SNAPFORGE_URL_SECRET")
+)
+```
+
+## Forward-compatible public API calls
+
+Compatible additive public endpoints can be used before a typed helper ships:
+
+```r
+snapforge_request(
+  client,
+  "/api/v1/future-compatible-endpoint",
+  method = "POST",
+  body = list(example = TRUE),
+  idempotency_key = "future-1"
+)
+```
+
+The raw request path still applies authentication, timeout, idempotency,
+structured errors, and credential redaction, and rejects private/admin paths.
+
+## Errors and quota
+
+HTTP failures raise a `snapforge_http_error`. The condition carries
+`status`, redacted `body`, and `quota` fields:
+
+```r
+tryCatch(
+  snapforge_capture(client, "https://example.com"),
+  snapforge_http_error = function(err) {
+    print(err$status)
+    print(err$quota)
+  }
+)
+```

@@ -1,0 +1,6 @@
+{
+  "name": "snapforge",
+  "version": "0.2.0",
+  "rUniverse": "https://agentforge-labs.r-universe.dev",
+  "sourceRepository": "https://github.com/AgentForge-Labs/snapforge-r"
+}
